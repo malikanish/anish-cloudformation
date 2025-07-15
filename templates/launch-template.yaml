@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EC2 Launch Template with Nginx Installation
+
+Parameters:
+  KeyName:
+    Type: String
+  AMI:
+    Type: String
+  InstanceType:
+    Type: String
+  SecurityGroupId:
+    Type: String
+
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: AnishLaunchTemplate
+      LaunchTemplateData:
+        ImageId: !Ref AMI
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+            amazon-linux-extras install nginx1 -y
+            systemctl enable nginx
+            systemctl start nginx
+            echo "<h1>Welcome to Anish's Nginx Server!</h1>" > /usr/share/nginx/html/index.html
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: AnishInstance
+
+Outputs:
+  LaunchTemplateId:
+    Value: !Ref LaunchTemplate
+
+  LaunchTemplateVersion:
+    Value: !GetAtt LaunchTemplate.LatestVersionNumber

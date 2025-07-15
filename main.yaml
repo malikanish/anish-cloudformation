@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Root CloudFormation Template for Modular Infrastructure
+
+Resources:
+
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/vpc.yaml
+      Parameters:
+        VpcCidr: 10.0.0.0/16
+        PublicSubnet1Cidr: 10.0.1.0/24
+        PublicSubnet2Cidr: 10.0.2.0/24
+
+  SGStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/security-group.yaml
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+
+  LaunchTemplateStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SGStack
+    Properties:
+      TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/launch-template.yaml
+      Parameters:
+        KeyName: Anish-cloud
+        AMI: ami-0c02fb55956c7d316
+        InstanceType: t2.micro
+        SecurityGroupId: !GetAtt SGStack.Outputs.InstanceSGId
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SGStack
+    Properties:
+      TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/alb.yaml
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        Subnet1Id: !GetAtt VPCStack.Outputs.Subnet1Id
+        Subnet2Id: !GetAtt VPCStack.Outputs.Subnet2Id
+        ALBSecurityGroupId: !GetAtt SGStack.Outputs.ALBSGId
+
+  ASGStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: [LaunchTemplateStack, ALBStack]
+    Properties:
+      TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/asg.yaml
+      Parameters:
+        LaunchTemplateId: !GetAtt LaunchTemplateStack.Outputs.LaunchTemplateId
+        LaunchTemplateVersion: !GetAtt LaunchTemplateStack.Outputs.LaunchTemplateVersion
+        SubnetId: !GetAtt VPCStack.Outputs.Subnet1Id
+        TargetGroupArn: !GetAtt ALBStack.Outputs.TargetGroupArn
