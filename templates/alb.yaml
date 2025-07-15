@@ -4,18 +4,37 @@ Description: Application Load Balancer with 2 Subnets
 Parameters:
   VpcId:
     Type: String
+
   Subnet1Id:
     Type: String
+
   Subnet2Id:
     Type: String
+
   ALBSecurityGroupId:
     Type: String
+
+  ALBName:
+    Type: String
+    Default: AnishALB
+
+  TargetGroupName:
+    Type: String
+    Default: AnishTargetGroup
+
+  ListenerPort:
+    Type: Number
+    Default: 80
+
+  TargetPort:
+    Type: Number
+    Default: 80
 
 Resources:
   ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: AnishALB
+      Name: !Ref ALBName
       Scheme: internet-facing
       Subnets:
         - !Ref Subnet1Id
@@ -26,9 +45,9 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: AnishTargetGroup
+      Name: !Ref TargetGroupName
       VpcId: !Ref VpcId
-      Port: 80
+      Port: !Ref TargetPort
       Protocol: HTTP
       TargetType: instance
       HealthCheckPath: /
@@ -38,7 +57,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       LoadBalancerArn: !Ref ALB
-      Port: 80
+      Port: !Ref ListenerPort
       Protocol: HTTP
       DefaultActions:
         - Type: forward
@@ -47,3 +66,5 @@ Resources:
 Outputs:
   TargetGroupArn:
     Value: !Ref TargetGroup
+  LoadBalancerDNS:
+    Value: !GetAtt ALB.DNSName

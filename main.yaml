@@ -11,6 +11,12 @@ Resources:
         VpcCidr: 10.0.0.0/16
         PublicSubnet1Cidr: 10.0.1.0/24
         PublicSubnet2Cidr: 10.0.2.0/24
+        VpcName: AnishVPC
+        IGWName: AnishIGW
+        Subnet1Name: Anish-PublicSubnet1
+        Subnet2Name: Anish-PublicSubnet2
+        RouteTableName: AnishRouteTable
+
 
   SGStack:
     Type: AWS::CloudFormation::Stack
@@ -19,6 +25,10 @@ Resources:
       TemplateURL: https://anishcloudformation.s3.amazonaws.com/templates/security-group.yaml
       Parameters:
         VpcId: !GetAtt VPCStack.Outputs.VpcId
+        ALBSGName: AnishALBSG
+        InstanceSGName: AnishInstanceSG
+        ALBAllowedCIDR: 0.0.0.0/0
+        AllowedPort: 80
 
   LaunchTemplateStack:
     Type: AWS::CloudFormation::Stack
@@ -30,6 +40,10 @@ Resources:
         AMI: ami-0c02fb55956c7d316
         InstanceType: t2.micro
         SecurityGroupId: !GetAtt SGStack.Outputs.InstanceSGId
+        LaunchTemplateName: AnishLaunchTemplate
+        InstanceTagName: AnishInstance
+        WelcomeMessage: "<h1>Welcome to Anish's Nginx Server!</h1>"
+
 
   ALBStack:
     Type: AWS::CloudFormation::Stack
@@ -41,6 +55,11 @@ Resources:
         Subnet1Id: !GetAtt VPCStack.Outputs.Subnet1Id
         Subnet2Id: !GetAtt VPCStack.Outputs.Subnet2Id
         ALBSecurityGroupId: !GetAtt SGStack.Outputs.ALBSGId
+        ALBName: AnishALB
+        TargetGroupName: AnishTargetGroup
+        ListenerPort: 80
+        TargetPort: 80
+
 
   ASGStack:
     Type: AWS::CloudFormation::Stack
@@ -52,3 +71,8 @@ Resources:
         LaunchTemplateVersion: !GetAtt LaunchTemplateStack.Outputs.LaunchTemplateVersion
         SubnetId: !GetAtt VPCStack.Outputs.Subnet1Id
         TargetGroupArn: !GetAtt ALBStack.Outputs.TargetGroupArn
+        MinSize: 1
+        MaxSize: 2
+        DesiredCapacity: 1
+        HealthCheckGracePeriod: 180
+        TargetCPUUtilization: 50.0

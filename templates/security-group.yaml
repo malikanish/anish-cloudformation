@@ -5,28 +5,52 @@ Parameters:
   VpcId:
     Type: String
 
-Resources:
-  InstanceSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow HTTP from ALB
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          SourceSecurityGroupId: !Ref ALBSG
+  ALBSGName:
+    Type: String
+    Default: AnishALBSG
 
+  InstanceSGName:
+    Type: String
+    Default: AnishInstanceSG
+
+  ALBAllowedCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+
+  AllowedPort:
+    Type: Number
+    Default: 80
+
+Resources:
   ALBSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP from internet
       VpcId: !Ref VpcId
+      GroupName: !Ref ALBSGName
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+          FromPort: !Ref AllowedPort
+          ToPort: !Ref AllowedPort
+          CidrIp: !Ref ALBAllowedCIDR
+      Tags:
+        - Key: Name
+          Value: !Ref ALBSGName
+
+  InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP from ALB
+      VpcId: !Ref VpcId
+      GroupName: !Ref InstanceSGName
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref AllowedPort
+          ToPort: !Ref AllowedPort
+          SourceSecurityGroupId: !Ref ALBSG
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceSGName
 
 Outputs:
   InstanceSGId:

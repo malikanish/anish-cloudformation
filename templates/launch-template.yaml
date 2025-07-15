@@ -10,12 +10,21 @@ Parameters:
     Type: String
   SecurityGroupId:
     Type: String
+  LaunchTemplateName:
+    Type: String
+    Default: AnishLaunchTemplate
+  InstanceTagName:
+    Type: String
+    Default: AnishInstance
+  WelcomeMessage:
+    Type: String
+    Default: "<h1>Welcome to Anish's Nginx Server!</h1>"
 
 Resources:
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchTemplateName: AnishLaunchTemplate
+      LaunchTemplateName: !Ref LaunchTemplateName
       LaunchTemplateData:
         ImageId: !Ref AMI
         InstanceType: !Ref InstanceType
@@ -29,12 +38,12 @@ Resources:
             amazon-linux-extras install nginx1 -y
             systemctl enable nginx
             systemctl start nginx
-            echo "<h1>Welcome to Anish's Nginx Server!</h1>" > /usr/share/nginx/html/index.html
+            echo "${WelcomeMessage}" > /usr/share/nginx/html/index.html
         TagSpecifications:
           - ResourceType: instance
             Tags:
               - Key: Name
-                Value: AnishInstance
+                Value: !Ref InstanceTagName
 
 Outputs:
   LaunchTemplateId:

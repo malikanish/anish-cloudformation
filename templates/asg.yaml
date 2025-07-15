@@ -4,12 +4,35 @@ Description: Auto Scaling Group with Target Tracking
 Parameters:
   LaunchTemplateId:
     Type: String
+
   LaunchTemplateVersion:
     Type: String
+
   SubnetId:
     Type: String
+
   TargetGroupArn:
     Type: String
+
+  MinSize:
+    Type: Number
+    Default: 1
+
+  MaxSize:
+    Type: Number
+    Default: 2
+
+  DesiredCapacity:
+    Type: Number
+    Default: 1
+
+  HealthCheckGracePeriod:
+    Type: Number
+    Default: 180
+
+  TargetCPUUtilization:
+    Type: Number
+    Default: 50.0
 
 Resources:
   AutoScalingGroup:
@@ -22,22 +45,22 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplateId
         Version: !Ref LaunchTemplateVersion
-      MinSize: 1
-      MaxSize: 2
-      DesiredCapacity: 1
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      DesiredCapacity: !Ref DesiredCapacity
       HealthCheckType: EC2
-      HealthCheckGracePeriod: 180
+      HealthCheckGracePeriod: !Ref HealthCheckGracePeriod
 
   ScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
       AutoScalingGroupName: !Ref AutoScalingGroup
       PolicyType: TargetTrackingScaling
-      EstimatedInstanceWarmup: 180
+      EstimatedInstanceWarmup: !Ref HealthCheckGracePeriod
       TargetTrackingConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ASGAverageCPUUtilization
-        TargetValue: 50.0
+        TargetValue: !Ref TargetCPUUtilization
 
 Outputs:
   AutoScalingGroupName:

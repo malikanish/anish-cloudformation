@@ -8,8 +8,19 @@ Parameters:
     Type: String
   PublicSubnet2Cidr:
     Type: String
+  VpcName:
+    Type: String
+  IGWName:
+    Type: String
+  Subnet1Name:
+    Type: String
+  Subnet2Name:
+    Type: String
+  RouteTableName:
+    Type: String
 
 Resources:
+
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -18,14 +29,14 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: AnishVPC
+          Value: !Ref VpcName
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: AnishIGW
+          Value: !Ref IGWName
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -42,7 +53,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
       Tags:
         - Key: Name
-          Value: PublicSubnet1
+          Value: !Ref Subnet1Name
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -53,12 +64,15 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
       Tags:
         - Key: Name
-          Value: PublicSubnet2
+          Value: !Ref Subnet2Name
 
   RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Ref RouteTableName
 
   Route:
     Type: AWS::EC2::Route
